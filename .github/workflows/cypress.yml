@@ -36,7 +36,7 @@ jobs:
           node-version: "18"
 
       - name: Install app dependencies
-        run: cd realworld-app && npm install
+        run: cd realworld-app && npm install --legacy-peer-deps
 
       - name: Setup database
         run: cd realworld-app && npm run db:seed
