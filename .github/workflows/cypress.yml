@@ -51,6 +51,9 @@ jobs:
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/realworld
 
+      - name: Wait for database to settle
+        run: sleep 3
+
       - name: Start app server
         run: cd realworld-app && nohup npm start > ../app.log 2>&1 &
         env:
@@ -67,7 +70,14 @@ jobs:
         env:
           CYPRESS_USERNAME: ${{ secrets.CYPRESS_USERNAME }}
           CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}
-        run: npx cypress run
+        run: |
+          cd ../realworld-app 
+          npm start & 
+
+          npx wait-on http://localhost:3000 --timeout 120000
+
+          cd ../cypress-tests
+          npx cypress run
 
       - name: Upload Screenshots on Failure
         uses: actions/upload-artifact@v4
