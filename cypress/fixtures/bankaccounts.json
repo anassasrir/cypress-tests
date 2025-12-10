@@ -1,0 +1,20 @@
+{
+  "validAccount": {
+    "accountName": "Savings Account",
+    "accountNumber": "123456789",
+    "bankName": "Bank of Cypress",
+    "routingNumber": "987654321"
+  },
+  "accountToDelete": {
+    "accountName": "Checking Account",
+    "accountNumber": "987654321",
+    "bankName": "Cypress National Bank",
+    "routingNumber": "123456789"
+  },
+  "invalidAccount": {
+    "accountName": "",
+    "accountNumber": "abcde",
+    "bankName": "",
+    "routingNumber": "123"
+  }
+}
