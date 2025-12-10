@@ -14,4 +14,13 @@
 // ***********************************************************
 
 // Import commands.js using ES2015 syntax:
-import './commands'
+import "./commands";
+
+const specPath = Cypress.spec.relative;
+
+if (specPath.includes("cypress\\tests\\ui\\")) {
+  beforeEach(() => {
+    cy.visit("/");
+    cy.clearAllCookies();
+  });
+}
