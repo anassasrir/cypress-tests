@@ -17,8 +17,8 @@
 import "./commands";
 
 const specPath = Cypress.spec.relative;
-
-if (specPath.includes("cypress\\tests\\ui\\")) {
+const normalizedSpecPath = specPath.replace(/\\/g, "/");
+if (normalizedSpecPath.includes("ui/")) {
   beforeEach(() => {
     cy.visit("/");
     cy.clearAllCookies();

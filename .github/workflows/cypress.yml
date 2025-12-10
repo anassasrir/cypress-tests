@@ -68,3 +68,11 @@ jobs:
           CYPRESS_USERNAME: ${{ secrets.CYPRESS_USERNAME }}
           CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}
         run: npx cypress run
+
+      - name: Upload Screenshots on Failure
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cypress-screenshots
+          path: cypress-tests/cypress/screenshots
+          retention-days: 7
