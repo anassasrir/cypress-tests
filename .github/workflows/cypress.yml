@@ -5,7 +5,7 @@ on:
   pull_request:
 
 jobs:
-  cypress-run:
+  setup-app:
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -23,17 +23,6 @@ jobs:
           - 5432:5432
 
     steps:
-      - name: Checkout Cypress tests repo
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "18"
-
-      - name: Install Cypress dependencies
-        run: npm ci
-
       - name: Checkout realworld app
         uses: actions/checkout@v4
         with:
@@ -41,8 +30,13 @@ jobs:
           ref: develop
           path: realworld-app
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
       - name: Install app dependencies
-        run: cd realworld-app && npm ci
+        run: cd realworld-app && npm install
 
       - name: Setup database
         run: cd realworld-app && npm run db:seed
@@ -57,9 +51,24 @@ jobs:
       - name: Wait for server to be ready
         run: npx wait-on http://localhost:3000 --timeout 60000
 
+  cypress-tests:
+    needs: setup-app
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Cypress tests repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Install Cypress dependencies
+        run: npm ci
+
       - name: Run Cypress tests
         env:
           CYPRESS_USERNAME: ${{ secrets.CYPRESS_USERNAME }}
           CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432/realworld
         run: npx cypress run
