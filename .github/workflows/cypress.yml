@@ -2,15 +2,28 @@ name: Cypress E2E Tests
 
 on:
   push:
-    branches: [main, master, develop]
   pull_request:
-    branches: [main, master, develop]
 
 jobs:
   cypress-run:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: realworld
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
     steps:
-      - name: Checkout code
+      - name: Checkout Cypress tests repo
         uses: actions/checkout@v4
 
       - name: Setup Node.js
@@ -18,11 +31,35 @@ jobs:
         with:
           node-version: "18"
 
-      - name: Install dependencies
+      - name: Install Cypress dependencies
         run: npm ci
+
+      - name: Checkout realworld app
+        uses: actions/checkout@v4
+        with:
+          repository: cypress-io/cypress-realworld-app
+          ref: develop
+          path: realworld-app
+
+      - name: Install app dependencies
+        run: cd realworld-app && npm ci
+
+      - name: Setup database
+        run: cd realworld-app && npm run db:seed
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/realworld
+
+      - name: Start app server
+        run: cd realworld-app && npm start &
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/realworld
+
+      - name: Wait for server to be ready
+        run: npx wait-on http://localhost:3000 --timeout 60000
 
       - name: Run Cypress tests
         env:
           CYPRESS_USERNAME: ${{ secrets.CYPRESS_USERNAME }}
           CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/realworld
         run: npx cypress run
