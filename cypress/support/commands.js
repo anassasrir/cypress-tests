@@ -32,10 +32,10 @@ Cypress.Commands.add("getValidUser", () => {
 
   let userObject;
 
-  if (seededUsername && seededPassword) {
+  if (seededUsername && secretPassword) {
     userObject = {
       username: seededUsername,
-      password: seededPassword,
+      password: secretPassword,
     };
   } else if (localValidUser && localValidUser.username) {
     userObject = localValidUser;
