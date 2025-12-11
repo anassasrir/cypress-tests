@@ -46,6 +46,9 @@ jobs:
       - name: Install Cypress dependencies
         run: cd cypress-tests && npm ci
 
+      - name: Wait for PostgreSQL service
+        run: npx wait-on tcp:localhost:5432 --timeout 60000
+
       - name: Setup database
         run: cd realworld-app && npm run db:seed
         env:
@@ -65,19 +68,28 @@ jobs:
       - name: Show app server logs (debug)
         run: tail -n 50 app.log
 
-      - name: Run Cypress tests
+      - name: Check process on port 3000
+        run: |
+          echo "--- Diagnostic du port 3000 ---"
+          PID=$(lsof -i :3000 -t || true)
+          if [ -z "$PID" ]; then
+            echo "ERREUR: Aucun processus trouvé sur le port 3000."
+          else
+            echo "Processus trouvé sur le port 3000 (PID: $PID)"
+            ps -fp $PID
+            echo "--- Variables d'environnement du processus ---"
+            cat /proc/$PID/environ | tr '\0' '\n' | grep -E "NODE|DATABASE|URL|PORT"
+          fi
+          echo "-----------------------------------"
+
+      - name: Run Cypress tests and record to Cypress Cloud
         working-directory: cypress-tests
         env:
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
           CYPRESS_USERNAME: ${{ secrets.CYPRESS_USERNAME }}
           CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}
-        run: |
-          cd ../realworld-app 
-          npm start & 
-
-          npx wait-on http://localhost:3000 --timeout 120000
-
-          cd ../cypress-tests
-          npx cypress run --record --key ${{ secrets.CYPRESS_RECORD_KEY }}
+          CYPRESS_API_URL: http://localhost:3001
+        run: npx cypress run --record --key $CYPRESS_RECORD_KEY
 
       - name: Upload Screenshots on Failure
         uses: actions/upload-artifact@v4
