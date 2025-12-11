@@ -57,6 +57,9 @@ jobs:
       - name: Wait for database to settle
         run: sleep 3
 
+      - name: List seeded users
+        run: cd realworld-app && yarn list:dev:users
+
       - name: Start app server
         run: cd realworld-app && nohup npm start > ../app.log 2>&1 &
         env:
