@@ -28,10 +28,15 @@ Cypress.Commands.add("getValidUser", () => {
   const seededUsername = Cypress.env("CYPRESS_SEEDED_USERNAME");
   const secretPassword = Cypress.env("CYPRESS_PASSWORD");
 
-  const localValidUser = Cypress.env();
+  const localValidUser = Cypress.env("localValidUser");
 
   let userObject;
-
+  console.log(
+    "CYPRESS_SEEDED_USERNAME:",
+    Cypress.env("CYPRESS_SEEDED_USERNAME")
+  );
+  console.log("CYPRESS_PASSWORD:", Cypress.env("CYPRESS_PASSWORD"));
+  console.log("Cypress.env():", Cypress.env());
   if (seededUsername) {
     userObject = {
       username: seededUsername,
