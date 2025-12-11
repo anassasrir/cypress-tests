@@ -5,6 +5,7 @@ module.exports = defineConfig({
   projectId: "mvuaor",
   e2e: {
     baseUrl: "http://localhost:3000",
+    apiUrl: "http://localhost:3001",
     specPattern: "cypress/tests/**/*.spec.{js,jsx,ts,tsx}",
     supportFile: "cypress/support/e2e.js",
     watchForFileChanges: false,
