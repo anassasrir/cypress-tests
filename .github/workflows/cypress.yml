@@ -1,8 +1,15 @@
 name: Cypress E2E Tests
 
 on:
-  push:
   pull_request:
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: "20"
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
+  POSTGRES_DB: realworld
+  DATABASE_URL: postgres://postgres:postgres@localhost:5432/realworld
 
 jobs:
   e2e:
@@ -11,9 +18,9 @@ jobs:
       postgres:
         image: postgres:13
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: realworld
+          POSTGRES_USER: ${{ env.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -23,79 +30,59 @@ jobs:
           - 5432:5432
 
     steps:
-      - name: Checkout realworld app
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           repository: cypress-io/cypress-realworld-app
           ref: develop
           path: realworld-app
 
-      - name: Checkout Cypress tests repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           path: cypress-tests
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: ${{ env.NODE_VERSION }}
 
-      - name: Install app dependencies
-        run: cd realworld-app && npm install --legacy-peer-deps
+      - run: cd realworld-app && npm install --legacy-peer-deps
+      - run: cd cypress-tests && npm ci
 
-      - name: Install Cypress dependencies
-        run: cd cypress-tests && npm ci
-
-      - name: Wait for PostgreSQL service
-        run: npx wait-on tcp:localhost:5432 --timeout 60000
-
-      - name: Setup database
-        run: cd realworld-app && npm run db:seed
+      - run: npx wait-on tcp:localhost:5432 --timeout 60000
+      - run: cd realworld-app && npm run db:seed
         env:
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432/realworld
+          DATABASE_URL: ${{ env.DATABASE_URL }}
 
-      - name: Wait for database to settle
-        run: sleep 3
+      - run: sleep 3
 
-      - name: Diagnostic - List seeded users
-        run: cd realworld-app && yarn list:dev:users
+      - run: cd realworld-app && yarn list:dev:users
 
       - name: Get the first seeded username
         id: get_user
         run: |
           SEEDED_USER=$(cd realworld-app && yarn list:dev:users | tail -n +3 | head -n 1 | awk '{print $2}' | tr -d '[:space:]')
           echo "seeded_username=$SEEDED_USER" >> $GITHUB_OUTPUT
-          echo "captured seeded user: $SEEDED_USER"
 
-      - name: Start app server
-        run: cd realworld-app && nohup npm start > ../app.log 2>&1 &
+      - run: cd realworld-app && nohup npm start > ../app.log 2>&1 &
         env:
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432/realworld
+          DATABASE_URL: ${{ env.DATABASE_URL }}
 
-      - name: Wait for server to be ready
-        run: npx wait-on http://localhost:3000 --timeout 120000
+      - run: npx wait-on http://localhost:3000 --timeout 120000
+      - run: tail -n 50 app.log
 
-      - name: Show app server logs (debug)
-        run: tail -n 50 app.log
-
-      - name: Diagnostic - Check Cypress ENV
-        run: |
-          echo "Debug Cypress ENV variables:"
-          echo "CYPRESS_SEEDED_USERNAME: ${{ steps.get_user.outputs.seeded_username }}" 
+      - run: |
+          echo "CYPRESS_SEEDED_USERNAME: ${{ steps.get_user.outputs.seeded_username }}"
           echo "CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}"
         working-directory: cypress-tests
 
-      - name: Run Cypress tests and record to Cypress Cloud
+      - run: npx cypress run --record --key ${{ secrets.CYPRESS_RECORD_KEY }}
         working-directory: cypress-tests
         env:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
           CYPRESS_SEEDED_USERNAME: ${{ steps.get_user.outputs.seeded_username }}
           CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}
           CYPRESS_API_URL: http://localhost:3001
-        run: npx cypress run --record --key $CYPRESS_RECORD_KEY
 
-      - name: Upload Screenshots on Failure
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: cypress-screenshots
