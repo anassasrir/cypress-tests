@@ -63,10 +63,9 @@ jobs:
       - name: Get the first seeded username
         id: get_user
         run: |
-          SEEDED_USER=$(cd realworld-app && yarn list:dev:users | awk 'NR==2{print $2}')
+          SEEDED_USER=$(cd realworld-app && yarn list:dev:users | awk 'NR==4{print $2}')
           echo "seeded_username=$SEEDED_USER" >> $GITHUB_OUTPUT
           echo "captured seeded user: $SEEDED_USER"
-
       - name: Start app server
         run: cd realworld-app && nohup npm start > ../app.log 2>&1 &
         env:
