@@ -49,3 +49,14 @@ Cypress.Commands.add("getValidUser", () => {
   }
   return userObject;
 });
+
+Cypress.Commands.add("loginByApi", (username, password) => {
+  cy.request({
+    method: "POST",
+    url: `${Cypress.config("apiUrl")}/login`,
+    body: {
+      username,
+      password,
+    },
+  });
+});
