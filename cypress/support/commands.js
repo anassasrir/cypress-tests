@@ -25,14 +25,14 @@
 // Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
 
 Cypress.Commands.add("getValidUser", () => {
-  const seededUsername = Cypress.env("CYPRESS_SEEDED_USERNAME");
+  const seededUsername = Cypress.env("SEEDED_USERNAME");
   const secretPassword = Cypress.env("CYPRESS_PASSWORD");
 
   const localValidUser = Cypress.env();
 
   let userObject;
 
-  if (seededUsername && secretPassword) {
+  if (seededUsername) {
     userObject = {
       username: seededUsername,
       password: secretPassword,

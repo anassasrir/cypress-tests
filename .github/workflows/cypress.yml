@@ -81,7 +81,7 @@ jobs:
       - name: Diagnostic - Check Cypress ENV
         run: |
           echo "Debug Cypress ENV variables:"
-          echo "CYPRESS_SEEDED_USERNAME: ${{ steps.get_user.outputs.seeded_username }}" 
+          echo "SEEDED_USERNAME: ${{ steps.get_user.outputs.seeded_username }}" 
           echo "CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}"
         working-directory: cypress-tests
 
@@ -89,7 +89,7 @@ jobs:
         working-directory: cypress-tests
         env:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
-          CYPRESS_SEEDED_USERNAME: ${{ steps.get_user.outputs.seeded_username }}
+          SEEDED_USERNAME: ${{ steps.get_user.outputs.seeded_username }}
           CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}
           CYPRESS_API_URL: http://localhost:3001
         run: npx cypress run --record --key $CYPRESS_RECORD_KEY
