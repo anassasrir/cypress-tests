@@ -57,15 +57,16 @@ jobs:
       - name: Wait for database to settle
         run: sleep 3
 
-      - name: List seeded users
+      - name: Diagnostic - List seeded users
         run: cd realworld-app && yarn list:dev:users
 
       - name: Get the first seeded username
         id: get_user
         run: |
-          SEEDED_USER=$(cd realworld-app && yarn list:dev:users | awk 'NR==4{print $2}')
+          SEEDED_USER=$(cd realworld-app && yarn list:dev:users | tail -n +3 | head -n 1 | awk '{print $2}' | tr -d '[:space:]')
           echo "seeded_username=$SEEDED_USER" >> $GITHUB_OUTPUT
           echo "captured seeded user: $SEEDED_USER"
+
       - name: Start app server
         run: cd realworld-app && nohup npm start > ../app.log 2>&1 &
         env:
@@ -76,6 +77,13 @@ jobs:
 
       - name: Show app server logs (debug)
         run: tail -n 50 app.log
+
+      - name: Diagnostic - Check Cypress ENV
+        run: |
+          echo "Debug Cypress ENV variables:"
+          echo "CYPRESS_SEEDED_USERNAME: ${{ steps.get_user.outputs.seeded_username }}" 
+          echo "CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}"
+        working-directory: cypress-tests
 
       - name: Run Cypress tests and record to Cypress Cloud
         working-directory: cypress-tests
