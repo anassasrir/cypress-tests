@@ -60,6 +60,13 @@ jobs:
       - name: List seeded users
         run: cd realworld-app && yarn list:dev:users
 
+      - name: Get the first seeded username
+        id: get_user
+        run: |
+          SEEDED_USER=$(cd realworld-app && yarn list:dev:users | awk 'NR==2{print $2}')
+          echo "seeded_username=$SEEDED_USER" >> $GITHUB_OUTPUT
+          echo "captured seeded user: $SEEDED_USER"
+
       - name: Start app server
         run: cd realworld-app && nohup npm start > ../app.log 2>&1 &
         env:
@@ -71,25 +78,11 @@ jobs:
       - name: Show app server logs (debug)
         run: tail -n 50 app.log
 
-      - name: Check process on port 3000
-        run: |
-          echo "--- Diagnostic du port 3000 ---"
-          PID=$(lsof -i :3000 -t || true)
-          if [ -z "$PID" ]; then
-            echo "ERREUR: Aucun processus trouvé sur le port 3000."
-          else
-            echo "Processus trouvé sur le port 3000 (PID: $PID)"
-            ps -fp $PID
-            echo "--- Variables d'environnement du processus ---"
-            cat /proc/$PID/environ | tr '\0' '\n' | grep -E "NODE|DATABASE|URL|PORT"
-          fi
-          echo "-----------------------------------"
-
       - name: Run Cypress tests and record to Cypress Cloud
         working-directory: cypress-tests
         env:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
-          CYPRESS_USERNAME: ${{ secrets.CYPRESS_USERNAME }}
+          CYPRESS_SEEDED_USERNAME: ${{ steps.get_user.outputs.seeded_username }}
           CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}
           CYPRESS_API_URL: http://localhost:3001
         run: npx cypress run --record --key $CYPRESS_RECORD_KEY

@@ -10,10 +10,8 @@ module.exports = defineConfig({
     watchForFileChanges: false,
     setupNodeEvents(on, config) {},
     env: {
-      validUser: {
-        username: process.env.CYPRESS_USERNAME,
-        password: process.env.CYPRESS_PASSWORD,
-      },
+      username: process.env.CYPRESS_USERNAME,
+      password: process.env.CYPRESS_PASSWORD,
     },
   },
 });

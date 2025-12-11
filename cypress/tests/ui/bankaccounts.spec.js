@@ -2,12 +2,14 @@ import LoginPage from "../../support/pages/LoginPage";
 import Navigation from "../../support/pages/Navigation";
 import BankAccountsPage from "../../support/pages/BankAccountsPage";
 
-const user = Cypress.env("validUser");
 let bankaccountData;
 
 describe("Bank Accounts Tests", () => {
-  beforeEach(() => {
-    LoginPage.login(user.username, user.password);
+  beforeEach(function () {
+    cy.getValidUser().then((userObject) => {
+      this.user = userObject;
+      LoginPage.login(this.user.username, this.user.password);
+    });
     cy.fixture("bankaccounts").then((data) => {
       bankaccountData = data;
     });
